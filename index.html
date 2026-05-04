@@ -11,7 +11,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-  import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+  import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
   // ── CONFIGURACIÓN FIREBASE ──
   // INSTRUCCIONES: Reemplaza estos valores con los de TU proyecto Firebase:
@@ -24,7 +24,7 @@
     apiKey: "AIzaSyCydvTOakjkyCTkNlCRPtqnD1foEFvkchw",
     authDomain: "hianstudio.firebaseapp.com",
     projectId: "hianstudio",
-    storageBucket: "hianstudio.firebasestorage.app",
+    storageBucket: "hianstudio.appspot.com",
     messagingSenderId: "405903984171",
     appId: "1:405903984171:web:32b9abf52f544177f5cc6e",
     measurementId: "G-BSTZP36JNK"
@@ -38,7 +38,7 @@
     const db  = getFirestore(app);
     const storage = getStorage(app);
 
-    window.FB = { db, storage, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy, ref, uploadBytes, getDownloadURL, deleteObject };
+    window.FB = { db, storage, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy, ref, uploadBytesResumable, getDownloadURL, deleteObject };
     window._firebaseReady = true;
   } catch(e) {
     window._fbError = e.message;
@@ -192,18 +192,7 @@ body::before {
   color: var(--text3); text-align: center; line-height: 1.5;
 }
 
-/* Firebase config notice */
-.fb-notice {
-  background: rgba(245,158,11,0.1);
-  border: 1px solid var(--border3);
-  border-radius: 10px;
-  padding: 0.9rem 1rem;
-  font-family: var(--mono); font-size: 0.65rem;
-  color: var(--gold2); line-height: 1.6;
-  display: none;
-}
-.fb-notice.show { display: block; }
-.fb-notice a { color: var(--blue-sky); }
+
 
 /* ─── APP ─── */
 #app { display: none; height: 100vh; flex-direction: column; position: relative; z-index: 1; }
@@ -718,9 +707,9 @@ body::before {
     <div class="lock-tagline">☁ workspace · compartido en la nube</div>
   </div>
   <div class="lock-box">
-    <div id="fbNotice" class="fb-notice">
-      ⚠️ Firebase no configurado. Sigue los pasos de configuración dentro de la app después de ingresar.<br>
-      <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
+
+
+
     </div>
     <div>
       <div class="lock-label">Contraseña de acceso</div>
@@ -904,10 +893,7 @@ document.getElementById('pwInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') window.unlock();
 });
 
-// Check Firebase config
-if (!window._firebaseReady) {
-  document.getElementById('fbNotice').classList.add('show');
-}
+// Firebase listo — config correcta
 
 // ─── APP STATE ───────────────────────────────────────────────────────────────
 let files  = [];   // { id, name, size, type, groupId, date, downloadURL, storagePath, uploadedBy }
@@ -1097,20 +1083,33 @@ window.handleFiles = async function(list) {
     fill.style.width = Math.round((done/list.length)*100)+'%';
 
     if (window._firebaseReady) {
-      // Upload to Firebase Storage
-      const { storage, db, ref, uploadBytes, getDownloadURL, collection, addDoc, serverTimestamp } = window.FB;
+      // Upload to Firebase Storage with resumable upload (progress real)
+      const { storage, db, ref, uploadBytesResumable, getDownloadURL, collection, addDoc } = window.FB;
       const path = `hs_files/${Date.now()}_${file.name}`;
       const sRef = ref(storage, path);
       try {
-        const snap = await uploadBytes(sRef, file);
-        const url  = await getDownloadURL(snap.ref);
-        const meta = {
-          name: file.name, size: file.size, type: file.type,
-          groupId: selectedGroup, date: serverTimestamp(),
-          downloadURL: url, storagePath: path,
-          uploadedBy: 'Usuario'
-        };
-        await addDoc(collection(db, 'hs_files'), meta);
+        await new Promise((resolve, reject) => {
+          const task = uploadBytesResumable(sRef, file);
+          task.on('state_changed',
+            snapshot => {
+              const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+              fill.style.width = Math.round((done / list.length) * 100 + pct / list.length) + '%';
+              lbl.textContent = `Subiendo: ${file.name} — ${pct}%`;
+            },
+            reject,
+            async () => {
+              const url = await getDownloadURL(task.snapshot.ref);
+              await addDoc(collection(db, 'hs_files'), {
+                name: file.name, size: file.size, type: file.type,
+                groupId: selectedGroup,
+                date: Date.now(),
+                downloadURL: url, storagePath: path,
+                uploadedBy: 'Usuario'
+              });
+              resolve();
+            }
+          );
+        });
       } catch(e) {
         toast('Error subiendo ' + file.name + ': ' + e.message);
       }
