@@ -24,7 +24,7 @@
     apiKey: "AIzaSyCydvTOakjkyCTkNlCRPtqnD1foEFvkchw",
     authDomain: "hianstudio.firebaseapp.com",
     projectId: "hianstudio",
-    storageBucket: "hianstudio.appspot.com",
+    storageBucket: "hianstudio.firebasestorage.app",
     messagingSenderId: "405903984171",
     appId: "1:405903984171:web:32b9abf52f544177f5cc6e",
     measurementId: "G-BSTZP36JNK"
@@ -171,14 +171,14 @@ body::before {
   box-shadow: 0 0 0 3px rgba(33,150,243,0.12);
 }
 .lock-btn {
-  width: 100%;
   background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
-  color: #fff; border: none; border-radius: 10px;
-  padding: 0.9rem;
-  font-family: var(--display); font-size: 1rem; font-weight: 700;
-  letter-spacing: 0.1em; cursor: pointer;
+  color: #fff; border: none; border-radius: 8px;
+  padding: 0.55rem 1.4rem;
+  font-family: var(--display); font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 0.08em; cursor: pointer;
   transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
-  box-shadow: 0 4px 20px rgba(33,150,243,0.3);
+  box-shadow: 0 2px 12px rgba(33,150,243,0.3);
+  display: block; margin: 0 auto;
 }
 .lock-btn:hover { opacity: 0.9; box-shadow: 0 4px 28px rgba(33,150,243,0.45); }
 .lock-btn:active { transform: scale(0.98); }
@@ -1096,22 +1096,40 @@ window.handleFiles = async function(list) {
               fill.style.width = Math.round((done / list.length) * 100 + pct / list.length) + '%';
               lbl.textContent = `Subiendo: ${file.name} — ${pct}%`;
             },
-            reject,
+            err => {
+              console.error('Upload error:', err);
+              lbl.textContent = `❌ Error: ${err.code || err.message}`;
+              fill.style.background = 'var(--fire)';
+              reject(err);
+            },
             async () => {
-              const url = await getDownloadURL(task.snapshot.ref);
-              await addDoc(collection(db, 'hs_files'), {
-                name: file.name, size: file.size, type: file.type,
-                groupId: selectedGroup,
-                date: Date.now(),
-                downloadURL: url, storagePath: path,
-                uploadedBy: 'Usuario'
-              });
-              resolve();
+              try {
+                const url = await getDownloadURL(task.snapshot.ref);
+                await addDoc(collection(db, 'hs_files'), {
+                  name: file.name, size: file.size, type: file.type,
+                  groupId: selectedGroup,
+                  date: Date.now(),
+                  downloadURL: url, storagePath: path,
+                  uploadedBy: 'Usuario'
+                });
+                resolve();
+              } catch(e2) {
+                reject(e2);
+              }
             }
           );
         });
       } catch(e) {
-        toast('Error subiendo ' + file.name + ': ' + e.message);
+        console.error('Upload catch:', e);
+        const msg = e.code === 'storage/unauthorized'
+          ? '❌ Sin permisos en Storage. Ve a Firebase Console → Storage → Reglas y pon: allow read, write: if true;'
+          : e.code === 'storage/canceled' ? '❌ Subida cancelada'
+          : '❌ Error: ' + (e.code || e.message);
+        lbl.textContent = msg;
+        toast(msg);
+        fill.style.background = 'var(--fire)';
+        await new Promise(r => setTimeout(r, 3000));
+        fill.style.background = '';
       }
     } else {
       // Fallback local (IndexedDB not available in cross-device, just show warning)
