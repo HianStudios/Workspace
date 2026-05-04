@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HianStudios — Workspace</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ════════════════════════ AUTH SCREEN ════════════════════════ -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-bg">
+    <div class="auth-orb orb-1"></div>
+    <div class="auth-orb orb-2"></div>
+    <div class="auth-orb orb-3"></div>
+    <div class="auth-grid"></div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">HianStudios</span>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form active">
+      <h2>Bienvenido de vuelta</h2>
+      <p class="auth-sub">Accede a tu workspace privado</p>
+      <div class="field-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" />
+      </div>
+      <div class="field-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <div id="auth-error" class="auth-error hidden"></div>
+      <button class="btn-primary" onclick="loginEmail()">Ingresar</button>
+      <button class="btn-google" onclick="loginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.3 30.2 0 24 0 14.6 0 6.7 5.4 2.7 13.3l7.9 6.1C12.5 13 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.5-4.1 7.1-10.2 7.1-17.4z"/><path fill="#FBBC05" d="M10.6 28.5A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.7-4.5L2.3 13.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l8-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.7l-7.6-5.9c-2.2 1.5-5 2.3-8.3 2.3-6.2 0-11.5-4.2-13.4-9.8l-8 6.2C6.4 42.6 14.6 48 24 48z"/></svg>
+        Continuar con Google
+      </button>
+      <p class="auth-switch">¿No tienes cuenta? <a href="#" onclick="toggleAuth()">Regístrate</a></p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form" class="auth-form">
+      <h2>Crear cuenta</h2>
+      <p class="auth-sub">Empieza tu workspace en HianStudios</p>
+      <div class="field-group">
+        <label>Nombre completo</label>
+        <input type="text" id="reg-name" placeholder="Tu nombre" />
+      </div>
+      <div class="field-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="tu@email.com" />
+      </div>
+      <div class="field-group">
+        <label>Contraseña</label>
+        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" />
+      </div>
+      <div class="field-group">
+        <label>Rol</label>
+        <select id="reg-role">
+          <option value="admin">Admin / Equipo</option>
+          <option value="client">Cliente</option>
+        </select>
+      </div>
+      <div id="reg-error" class="auth-error hidden"></div>
+      <button class="btn-primary" onclick="registerEmail()">Crear cuenta</button>
+      <p class="auth-switch">¿Ya tienes cuenta? <a href="#" onclick="toggleAuth()">Inicia sesión</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ APP SHELL ════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="ws-brand">
+        <span class="logo-icon sm">⬡</span>
+        <div>
+          <div class="ws-name">HianStudios</div>
+          <div class="ws-status"><span class="online-dot"></span> workspace activo</div>
+        </div>
+      </div>
+      <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="projects" onclick="showSection('projects')">
+        <span class="nav-icon">◈</span><span class="nav-label">Proyectos</span>
+      </button>
+      <button class="nav-item" data-section="files" onclick="showSection('files')">
+        <span class="nav-icon">⊡</span><span class="nav-label">Archivos</span>
+      </button>
+      <button class="nav-item" data-section="chat" onclick="showSection('chat')">
+        <span class="nav-icon">◎</span><span class="nav-label">Chat</span>
+        <span class="badge" id="chat-badge" style="display:none">0</span>
+      </button>
+      <button class="nav-item" data-section="clients" onclick="showSection('clients')">
+        <span class="nav-icon">⊕</span><span class="nav-label">Clientes</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card" id="user-card">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Usuario</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()" title="Cerrar sesión">⏻</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="page-title" id="page-title">Proyectos</div>
+      </div>
+      <div class="topbar-right">
+        <div class="online-users" id="online-users-bar"></div>
+        <div class="notif-bell" onclick="toggleNotifications()">
+          🔔 <span class="notif-count" id="notif-count" style="display:none">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- NOTIFICATIONS PANEL -->
+    <div class="notif-panel hidden" id="notif-panel">
+      <div class="notif-header">Notificaciones</div>
+      <div id="notif-list" class="notif-list"><p class="empty-state">Sin notificaciones</p></div>
+    </div>
+
+    <!-- ── PROJECTS SECTION ── -->
+    <section id="section-projects" class="content-section active">
+      <div class="section-header">
+        <h1>Proyectos</h1>
+        <button class="btn-accent" onclick="openProjectModal()">+ Nuevo proyecto</button>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-card"><span class="stat-num" id="stat-active">0</span><span class="stat-label">Activos</span></div>
+        <div class="stat-card"><span class="stat-num" id="stat-progress">0</span><span class="stat-label">En progreso</span></div>
+        <div class="stat-card"><span class="stat-num" id="stat-done">0</span><span class="stat-label">Terminados</span></div>
+      </div>
+
+      <div class="project-grid" id="project-grid">
+        <div class="loading-state">Cargando proyectos...</div>
+      </div>
+    </section>
+
+    <!-- ── FILES SECTION ── -->
+    <section id="section-files" class="content-section">
+      <div class="section-header">
+        <h1>Archivos</h1>
+        <div class="files-controls">
+          <select id="file-project-filter" onchange="loadFiles()">
+            <option value="">Todos los proyectos</option>
+          </select>
+          <label class="btn-accent upload-btn">
+            ⬆ Subir archivo
+            <input type="file" id="file-input" onchange="uploadFile()" style="display:none" multiple />
+          </label>
+        </div>
+      </div>
+      <div class="upload-progress hidden" id="upload-progress">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <span id="progress-text">Subiendo...</span>
+      </div>
+      <div class="file-grid" id="file-grid">
+        <div class="loading-state">Cargando archivos...</div>
+      </div>
+    </section>
+
+    <!-- ── CHAT SECTION ── -->
+    <section id="section-chat" class="content-section">
+      <div class="chat-layout">
+        <div class="chat-rooms-panel">
+          <div class="rooms-header">Canales</div>
+          <div id="rooms-list">
+            <button class="room-item active" onclick="selectRoom('general')">
+              <span class="room-hash">#</span> general
+            </button>
+            <button class="room-item" onclick="selectRoom('proyectos')">
+              <span class="room-hash">#</span> proyectos
+            </button>
+            <button class="room-item" onclick="selectRoom('entregas')">
+              <span class="room-hash">#</span> entregas
+            </button>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-topbar">
+            <span class="chat-room-name" id="chat-room-name"># general</span>
+            <span class="chat-room-desc">Canal principal del equipo</span>
+          </div>
+          <div class="messages-area" id="messages-area">
+            <div class="loading-state">Cargando mensajes...</div>
+          </div>
+          <div class="message-input-bar">
+            <input type="text" id="msg-input" placeholder="Escribe un mensaje..." onkeydown="handleMsgKey(event)" />
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CLIENTS SECTION ── -->
+    <section id="section-clients" class="content-section">
+      <div class="section-header">
+        <h1>Clientes</h1>
+        <button class="btn-accent" onclick="openClientModal()">+ Nuevo cliente</button>
+      </div>
+      <div class="client-grid" id="client-grid">
+        <div class="loading-state">Cargando clientes...</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ════════════════════════ MODALS ════════════════════════ -->
+
+<!-- Project Modal -->
+<div class="modal-overlay hidden" id="project-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="project-modal-title">Nuevo Proyecto</h3>
+      <button class="modal-close" onclick="closeModal('project-modal')">✕</button>
+    </div>
+    <div class="field-group">
+      <label>Nombre del proyecto</label>
+      <input type="text" id="proj-name" placeholder="Mi proyecto increíble" />
+    </div>
+    <div class="field-group">
+      <label>Descripción</label>
+      <textarea id="proj-desc" placeholder="Descripción detallada..." rows="3"></textarea>
+    </div>
+    <div class="field-group">
+      <label>Estado</label>
+      <select id="proj-status">
+        <option value="activo">Activo</option>
+        <option value="en progreso">En Progreso</option>
+        <option value="terminado">Terminado</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Cliente asignado (opcional)</label>
+      <select id="proj-client">
+        <option value="">Sin cliente</option>
+      </select>
+    </div>
+    <input type="hidden" id="proj-id" />
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('project-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveProject()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div class="modal-overlay hidden" id="client-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nuevo Cliente</h3>
+      <button class="modal-close" onclick="closeModal('client-modal')">✕</button>
+    </div>
+    <div class="field-group">
+      <label>Nombre / Empresa</label>
+      <input type="text" id="client-name" placeholder="Empresa XYZ" />
+    </div>
+    <div class="field-group">
+      <label>Email</label>
+      <input type="email" id="client-email" placeholder="cliente@empresa.com" />
+    </div>
+    <div class="field-group">
+      <label>País</label>
+      <input type="text" id="client-country" placeholder="Colombia, Ecuador..." />
+    </div>
+    <div class="field-group">
+      <label>Notas</label>
+      <textarea id="client-notes" placeholder="Notas sobre el cliente..." rows="2"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('client-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveClient()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay hidden" id="delete-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Confirmar eliminación</h3>
+      <button class="modal-close" onclick="closeModal('delete-modal')">✕</button>
+    </div>
+    <p class="delete-msg" id="delete-msg">¿Estás seguro de que deseas eliminar este elemento?</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('delete-modal')">Cancelar</button>
+      <button class="btn-danger" id="delete-confirm-btn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast hidden" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
